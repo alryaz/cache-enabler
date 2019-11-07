@@ -47,6 +47,17 @@ final class Cache_Enabler {
 
 
     /**
+     * possible webp options
+     *
+     * @var    integer
+     */
+
+    const WEBP_DISABLED = 0;
+    const WEBP_INTERNAL = 1;
+    const WEBP_DEFERRED = 2;
+
+
+    /**
      * constructor wrapper
      *
      * @since   1.0.0
@@ -1804,6 +1815,22 @@ final class Cache_Enabler {
 
 
     /**
+     * webp alternative dropdown
+     *
+     * @return  array    Key => value array
+     */
+
+    private static function _webp_select() {
+
+        return array(
+            self::WEBP_DISABLED => esc_html__('Disable separate cache entry generation', 'cache-enabler'),
+            self::WEBP_INTERNAL => esc_html__('Generate using internal (default) engine', 'cache-enabler'),
+            self::WEBP_DEFERRED => esc_html__('Defer generation to separate browser requests', 'cache-enabler')
+        );
+    }
+
+
+    /**
      * Check plugin requirements
      *
      * @since   1.1.0
@@ -2013,7 +2040,7 @@ final class Cache_Enabler {
             'expires'           => (int)$data['expires'],
             'new_post'          => (int)(!empty($data['new_post'])),
             'new_comment'       => (int)(!empty($data['new_comment'])),
-            'webp'              => (int)(!empty($data['webp'])),
+            'webp'              => (int)$data['webp'],
             'clear_on_upgrade'  => (int)(!empty($data['clear_on_upgrade'])),
             'compress'          => (int)(!empty($data['compress'])),
             'excl_ids'          => (string)sanitize_text_field(@$data['excl_ids']),
@@ -2105,18 +2132,31 @@ final class Cache_Enabler {
 
                                 <br />
 
-                                <label for="cache_webp">
-                                    <input type="checkbox" name="cache-enabler[webp]" id="cache_webp" value="1" <?php checked('1', $options['webp']); ?> />
-                                    <?php _e("Create an additional cached version for WebP image support. Convert your images to WebP with <a href=\"https://optimus.io/en/\" target=\"_blank\">Optimus</a>.", "cache-enabler") ?>
-                                </label>
-
-                                <br />
-
                                 <label for="cache_clear_on_upgrade">
                                     <input type="checkbox" name="cache-enabler[clear_on_upgrade]" id="cache_clear_on_upgrade" value="1" <?php checked('1', $options['clear_on_upgrade']); ?> />
                                     <?php _e("Clear the complete cache if any plugin has been upgraded.", "cache-enabler") ?>
                                 </label>
                             </fieldset>
+                        </td>
+                    </tr>
+
+                    <tr valign="top">
+                        <th scope="row">
+                            <?php _e("WebP Support", "cache-enabler") ?>
+                        </th>
+                        <td>
+                            <label for="cache_webp">
+                                <select name="cache-enabler[webp]" id="cache_webp">
+                                    <?php foreach( self::_webp_select() as $k => $v ) { ?>
+                                        <option value="<?php echo esc_attr($k) ?>" <?php selected($options['webp'], $k); ?>>
+                                            <?php echo esc_html($v) ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
+                                <p class="description">
+                                    <?php _e("Create an additional cached version for WebP image support. Convert your images to WebP with <a href=\"https://optimus.io/en/\" target=\"_blank\">Optimus</a>.", "cache-enabler") ?>
+                                </p>
+                            </label>
                         </td>
                     </tr>
 

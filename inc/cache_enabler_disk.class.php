@@ -189,10 +189,10 @@ final class Cache_Enabler_Disk {
 
         // get if-modified request headers
         if ( function_exists( 'apache_request_headers' ) ) {
-            $headers = apache_request_headers();
-            $http_if_modified_since = ( isset( $headers[ 'If-Modified-Since' ] ) ) ? $headers[ 'If-Modified-Since' ] : '';
-            $http_accept = ( isset( $headers[ 'Accept' ] ) ) ? $headers[ 'Accept' ] : '';
-            $http_accept_encoding = ( isset( $headers[ 'Accept-Encoding' ] ) ) ? $headers[ 'Accept-Encoding' ] : '';
+            $headers = array_change_key_case(apache_request_headers(), CASE_LOWER);
+            $http_if_modified_since = ( isset( $headers[ 'if-modified-since' ] ) ) ? $headers[ 'if-modified-since' ] : '';
+            $http_accept = ( isset( $headers[ 'accept' ] ) ) ? $headers[ 'accept' ] : '';
+            $http_accept_encoding = ( isset( $headers[ 'accept-encoding' ] ) ) ? $headers[ 'accept-encoding' ] : '';
         } else {
             $http_if_modified_since = ( isset( $_SERVER[ 'HTTP_IF_MODIFIED_SINCE' ] ) ) ? $_SERVER[ 'HTTP_IF_MODIFIED_SINCE' ] : '';
             $http_accept = ( isset( $_SERVER[ 'HTTP_ACCEPT' ] ) ) ? $_SERVER[ 'HTTP_ACCEPT' ] : '';
@@ -273,16 +273,19 @@ final class Cache_Enabler_Disk {
         // cache enabler options
         $options = Cache_Enabler::$options;
 
-        // create files
-        self::_create_file( self::_file_html(), $data.$cache_signature." (html) -->" );
-
-        // create pre-compressed file
-        if ($options['compress']) {
-            self::_create_file( self::_file_gzip(), gzencode($data.$cache_signature." (html gzip) -->", 9) );
-        }
+        // get request headers
+        $http_accept = '';
+        if ($options['webp'] == Cache_Enabler::WEBP_DEFERRED) {
+            if ( function_exists( 'apache_request_headers' ) ) {
+                $headers = array_change_key_case(apache_request_headers(), CASE_LOWER);
+                $http_accept = ( isset( $headers[ 'accept' ] ) ) ? $headers[ 'accept' ] : '';
+            } else {
+                $http_accept = ( isset( $_SERVER[ 'HTTP_ACCEPT' ] ) ) ? $_SERVER[ 'HTTP_ACCEPT' ] : '';
+            }
 
         // create webp supported files
-        if ($options['webp']) {
+        } elseif ($options['webp'] == Cache_Enabler::WEBP_INTERNAL) {
+
             // magic regex rule
             $regex_rule = '#(?<=(?:(ref|src|set)=[\"\']))(?:http[s]?[^\"\']+)(\.png|\.jp[e]?g)(?:[^\"\']+)?(?=[\"\')])#';
 
@@ -295,6 +298,29 @@ final class Cache_Enabler_Disk {
             if ($options['compress']) {
                 self::_create_file( self::_file_webp_gzip(), gzencode($converted_data.$cache_signature." (webp gzip) -->", 9) );
             }
+        }
+
+        // deferred webp generation
+        if ($options['webp'] == Cache_Enabler::WEBP_DEFERRED && $http_accept && ( strpos($http_accept, 'webp') !== false )) {
+
+            // create files
+            self::_create_file( self::_file_webp_html(), $data.$cache_signature." (webp) -->" );
+
+            // create pre-compressed file
+            if ($options['compress']) {
+                self::_create_file( self::_file_webp_gzip(), gzencode($data.$cache_signature." (webp gzip) -->", 9) );
+            }
+
+        } else {
+
+            // create files
+            self::_create_file( self::_file_html(), $data.$cache_signature." (html ".$http_accept.")".$config['webp']." -->" );
+
+            // create pre-compressed file
+            if ($options['compress']) {
+                self::_create_file( self::_file_gzip(), gzencode($data.$cache_signature." (html gzip) -->", 9) );
+            }
+
         }
 
     }
