@@ -673,6 +673,7 @@ final class Cache_Enabler {
                 'new_comment'       => 0,
                 'compress'          => 0,
                 'webp'              => 0,
+                'webp_delay'        => 0,
                 'clear_on_upgrade'  => 0,
                 'excl_ids'          => '',
                 'excl_regexp'       => '',
@@ -2109,7 +2110,14 @@ final class Cache_Enabler {
                                     <input type="checkbox" name="cache-enabler[webp]" id="cache_webp" value="1" <?php checked('1', $options['webp']); ?> />
                                     <?php _e("Create an additional cached version for WebP image support. Convert your images to WebP with <a href=\"https://optimus.io/en/\" target=\"_blank\">Optimus</a>.", "cache-enabler") ?>
                                 </label>
-
+                                
+                                <br />
+                                
+                                <label for="webp_delay" style="margin-left:18px>
+                                    <input type="checkbox" name="cache-enabler[webp_delay]" id="webp_delay" value="1" <?php checked('0', $options['webp_delay']); ?> />
+                                    <?php _e("Delay WebP-oriented cached version creation until a browser which supports WebP requests the page. Useful with custom plugins which sniff for headers.", "cache-enabler") ?>
+                                </label>
+                                
                                 <br />
 
                                 <label for="cache_clear_on_upgrade">
